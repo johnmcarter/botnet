@@ -56,7 +56,7 @@ int main( int argc, char ** argv ) {
     } else if ( getaddrinfo( argv[1], argv[2], &addrinfo, &result ) != 0 ) {
         fprintf( stderr, "\x1b[1;31mgetaddrinfo( %s ) reason is %s\x1b[0m\n", argv[1], strerror( errno ));
         exit( 1 );
-    } else if ((h = gethostbyname(argv[1])) == NULL) {
+    } else if ((h = gethostbyname("localhost")) == NULL) {
         herror("gethostbyname");
         exit(1);
     } else {

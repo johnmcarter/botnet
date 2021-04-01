@@ -16,6 +16,7 @@
 #include    <pthread.h>
 
 void *commandInput(void *vargp);
+int runCommand(char *command);
 
 typedef struct bot {
     int sd;

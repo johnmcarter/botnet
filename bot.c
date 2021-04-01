@@ -96,11 +96,19 @@ void *commandInput(void *vargp) {
     int             len;
 
     while ((len = read(sd, buffer, sizeof(buffer) - 1)) > 0) {
-        printf("%s\n", buffer);
+        runCommand(buffer);
     }
 
     printf("\x1b[1;31mConnection Terminated: killing bot %s\x1b[0m\n", botInfo.username);
     close(sd);
 
     return NULL;
+}
+
+int runCommand(char *command) {
+    int rc = 0;
+
+    printf("Running %s...\n", command);
+
+    return rc;
 }

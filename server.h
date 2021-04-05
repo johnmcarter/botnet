@@ -1,3 +1,8 @@
+/*
+John Carter
+3/30/2021
+*/
+
 #ifndef server_h
 #define server_h
 

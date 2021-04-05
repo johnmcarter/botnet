@@ -1,3 +1,8 @@
+/*
+John Carter
+3/30/2021
+*/
+
 #ifndef bot_h
 #define bot_h
 
@@ -16,8 +21,8 @@
 #include    <arpa/inet.h>
 #include    <pthread.h>
 
-void *commandInput(void *vargp);
-int runCommand(char *command);
+int commandInput(int sd);
+void *runCommand(void *vargp);
 
 typedef struct bot {
     int sd;

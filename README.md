@@ -2,14 +2,14 @@
 Botnet for IoT Ecosystem - Relies on IoT Malware repo for malware attack implementations
 
 #### Compilation
-The user can simply run 
+To compile the server and bot code, the user can simply run 
 ```
 make
 ```
-on the command line to compile the server and bot code. This will create two executables: server and bot.
+on the command line. This will create two executables: server and bot.
 
 #### Server
-To start the newly created botnet command and controll (C&C) server, run
+To start the newly created botnet command and control (C&C) server, run
 ```
 ./server <port number>
 ```
